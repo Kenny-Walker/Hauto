@@ -9,5 +9,6 @@ namespace Hauto.Interface.IService
         Task<BaseResponse> UpdateDeviceStatus(UpdateDeviceStatusDto updateDeviceStatus);
         Task<BaseResponse> GetDevice(int Id);
         Task<DeviceResponse> GetAllDevices();
+        Task SyncDevices();
     }
 }

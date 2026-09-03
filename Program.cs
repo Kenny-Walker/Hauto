@@ -20,6 +20,8 @@ builder.Services.AddScoped<IScheduleRepo, ScheduleRepo>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddSingleton<IMqttService, MqttService>();
+builder.Services.AddHostedService<MqttBackgroundService>();
 builder.Services.AddHttpContextAccessor();
 var connectionString = builder.Configuration.GetConnectionString("Hauto");
 builder.Services.AddDbContext<HautoContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));

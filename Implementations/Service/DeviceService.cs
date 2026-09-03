@@ -9,10 +9,12 @@ namespace Hauto.Implementations.Service
     {
         IDeviceRepo _DeviceRepository;
         ILogRepo _logRepository;
-        public DeviceService(IDeviceRepo DeviceRepository, ILogRepo logRepository)
+        IMqttService _mqttService;
+        public DeviceService(IDeviceRepo DeviceRepository, ILogRepo logRepository, IMqttService mqttService)
         {
             _DeviceRepository = DeviceRepository;
             _logRepository = logRepository;
+            _mqttService = mqttService;
         }
 
         public async Task<BaseResponse> CreateDevice(CreateDeviceDto createDevice)
@@ -129,6 +131,7 @@ namespace Hauto.Implementations.Service
             }
             Device.isActive = updateDeviceStatus.isActive;
             await _DeviceRepository.UpdateAsync(Device);
+            await _mqttService.PublishCommand(GetDeviceDetails(Device));
             if (Device.isActive == true)
             {
                 var log = new Log()
@@ -151,6 +154,11 @@ namespace Hauto.Implementations.Service
                 Message = "Device Status Updated",
                 Success = true
             };
+        }
+        public async Task SyncDevices()
+        {
+            var devices = await GetAllDevices();
+            await _mqttService.PublishSync(devices.Data);
         }
     }
 }
