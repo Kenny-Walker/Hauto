@@ -43,5 +43,11 @@ namespace Hauto.Controllers
         {
             var Device = await _DeviceService.GetAllDevices(); return Ok(Device);
         }
+
+        [HttpGet("GetHubDevices")]
+        public async Task<IActionResult> GetHubDevices(int HubId)
+        {
+            var Device = await _DeviceService.GetAllDevicesByHubId(HubId); return Ok(Device);
+        }
     }
 }

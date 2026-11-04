@@ -6,6 +6,7 @@ namespace Hauto.Interface.IRepository
     {
         Task<Device> GetDevice(int Id);
         Task<IList<Device>> GetActiveDevices(bool isActive);
+        Task<IList<Device>> GetAllDevices(int HubId);
         Task<IList<Device>> GetAllDevices();
     }
 }

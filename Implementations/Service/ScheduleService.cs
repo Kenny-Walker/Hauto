@@ -8,14 +8,57 @@ namespace Hauto.Implementations.Service
     public class ScheduleService : IScheduleService
     {
         IScheduleRepo _ScheduleRepository;
-        public ScheduleService(IScheduleRepo ScheduleRepository)
+        IScheduledDeviceRepo _SchedulededDeviceRepository;
+        IDeviceRepo _deviceRepository;
+        public ScheduleService(IScheduleRepo ScheduleRepository, IScheduledDeviceRepo SchedulededDeviceRepository, IDeviceRepo deviceRepository)
         {
             _ScheduleRepository = ScheduleRepository;
+            _SchedulededDeviceRepository = SchedulededDeviceRepository;
+            _deviceRepository = deviceRepository;
         }
 
-        public Task<BaseResponse> AddScheduledDevice(AddScheduledDeviceDto addDevice)
+        public async Task<BaseResponse> AddScheduledDevice(AddScheduledDeviceDto addDevice)
         {
-            throw new NotImplementedException();
+            var schedule = await _ScheduleRepository.GetSchedule(addDevice.ScheduleId);
+            var device = await _deviceRepository.GetDevice(addDevice.DeviceId);
+            if (schedule == null || device == null) 
+            {
+                return new BaseResponse()
+                {
+                    Message = "Schedule not found",
+                    Success = false
+                };
+
+            }
+            else if(schedule != null && device != null)
+            {
+                var existingScheduledDevice = await _SchedulededDeviceRepository.GetAsync(x => x.DeviceId == addDevice.DeviceId && x.ScheduleId == addDevice.ScheduleId);
+                if (existingScheduledDevice != null)
+                {
+                    return new BaseResponse()
+                    {
+                        Message = "Device already scheduled",
+                        Success = false
+                    };
+                }
+                var ScheduleDevice = new ScheduledDevice()
+                {
+                    DeviceId = addDevice.DeviceId,
+                    ScheduleId = addDevice.ScheduleId,
+                
+                };
+                await _SchedulededDeviceRepository.CreateAsync(ScheduleDevice);
+                return new BaseResponse()
+                {
+                    Message = "Device Added to Schedule Succesfully",
+                    Success = true
+                };
+            }
+            return new BaseResponse()
+            {
+                Message = "Unable to add Device to Schedule Succesfully",
+                Success = false
+            };
         }
 
         public async Task<BaseResponse> CreateSchedule(CreateScheduleDto createSchedule)
@@ -23,11 +66,33 @@ namespace Hauto.Implementations.Service
             var Schedule = new Schedule()
             {
                 ScheduleName = createSchedule.ScheduleName,
+                StartTime = createSchedule.StartTime,
+                EndTime = createSchedule.EndTime,
             };
             await _ScheduleRepository.CreateAsync(Schedule);
             return new BaseResponse()
             {
                 Message = "Schedule Added Succesfully",
+                Success = true
+            };
+        }
+
+        public async Task<BaseResponse> DeleteSchedule(int Id)
+        {
+            var schedule = await _ScheduleRepository.GetSchedule(Id);
+            if (schedule == null)
+            {
+                return new BaseResponse()
+                {
+                    Message = "Schedule not found",
+                    Success = false
+                };
+            }
+            schedule.IsDeleted = true;
+            await _ScheduleRepository.UpdateAsync(schedule);
+            return new BaseResponse()
+            {
+                Message = "Schedule Deleted Successfully",
                 Success = true
             };
         }
@@ -54,9 +119,26 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public Task<ScheduleResponse> GetAllScheduless()
+        public async Task<ScheduleDeviceResponse> GetAllDevicesByScheduleId(int ScheduleId)
         {
-            throw new NotImplementedException();
+            var Schedule = await _SchedulededDeviceRepository.GetScheduledDevices(ScheduleId);
+            if (Schedule == null)
+            {
+                return new ScheduleDeviceResponse()
+                {
+                    Data = null,
+                    Message = "Couldn't Retrieve Schedule Devices",
+                    Success = false
+                };
+            }
+            var ScheduleDeviceList = new List<GetScheduleDeviceDto>();
+            foreach (var x in Schedule) ScheduleDeviceList.Add(GetScheduleDeviceDetails(x));
+            return new ScheduleDeviceResponse
+            {
+                Data = ScheduleDeviceList,
+                Success = true,
+                Message = "Schedule Devices Retrieved Successfully"
+            };
         }
 
         public async Task<BaseResponse> GetSchedule(int Id)
@@ -79,21 +161,79 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public GetScheduleDto GetScheduleDetails(Schedule x)
+        public GetScheduleDto GetScheduleDetails(Schedule c)
         {
             return new GetScheduleDto()
             {
+                Id = c.Id,
+                ScheduleName = c.ScheduleName,
+                OnRepeat = c.OnRepeat,
+                isActive = c.isActive,
+                StartTime = c.StartTime,
+                EndTime = c.EndTime,
+                ScheduleDevice = c.ScheduledDevice.Select(x => new GetScheduleDeviceDto()
+                {
+                    Id = x.Id,
+                    DeviceId = x.DeviceId,
+                    isActive = x.isActive,
+                    Device = new GetDeviceDto()
+                    {
+                        Id = x.Device.Id,
+                        HubId = x.Device.HubId,
+                        Hub = new GetHubsDto()
+                        {
+                            Id = x.Device.Hub.Id,
+                            HubName = x.Device.Hub.HubName,
+                        },
+                        DeviceName = x.Device.DeviceName,
+                        isActive = x.Device.isActive,
+                    },
+                    ScheduleId = x.ScheduleId,
+                }).ToList(),
+            };
+        }
+        public GetScheduleDeviceDto GetScheduleDeviceDetails(ScheduledDevice x)
+        {
+            return new GetScheduleDeviceDto()
+            {
                 Id = x.Id,
-                ScheduleName = x.ScheduleName,
-                OnRepeat = x.OnRepeat,
                 DeviceId = x.DeviceId,
+                isActive = x.isActive,
                 Device = new GetDeviceDto()
                 {
-                    Id = x.Device.Id,
+                    Id = x.DeviceId,
+                    HubId = x.Device.HubId,
                     DeviceName = x.Device.DeviceName,
-                    isActive = x.Device.isActive
-                }
-                
+                    isActive = x.Device.isActive,
+                },
+                ScheduleId = x.ScheduleId,
+                Schedule = new GetScheduleDto()
+                {
+                    Id = x.Id,
+                    ScheduleName = x.Schedule.ScheduleName,
+                    OnRepeat = x.Schedule.OnRepeat,
+                    isActive = x.Schedule.isActive,
+                },
+            };
+        }
+
+        public async Task<BaseResponse> UpdateActiveScheduleStatus(UpdateActiveScheduleStatusDto updateActiveScheduleStatus)
+        {
+            var Schedule = await _ScheduleRepository.GetSchedule(updateActiveScheduleStatus.Id);
+            if (Schedule == null)
+            {
+                return new BaseResponse()
+                {
+                    Message = "Schedule does not exist",
+                    Success = false
+                };
+            }
+            Schedule.isActive = updateActiveScheduleStatus.isActive;
+            await _ScheduleRepository.UpdateAsync(Schedule);
+            return new BaseResponse()
+            {
+                Message = "Schedule Status Updated",
+                Success = true
             };
         }
 
@@ -109,6 +249,8 @@ namespace Hauto.Implementations.Service
                 };
             }
             Schedule.ScheduleName = updateSchedule.ScheduleName;
+            Schedule.StartTime = updateSchedule.StartTime;
+            Schedule.EndTime = updateSchedule.EndTime;
             await _ScheduleRepository.UpdateAsync(Schedule);
             return new BaseResponse()
             {
@@ -134,6 +276,123 @@ namespace Hauto.Implementations.Service
             {
                 Message = "Schedule Status Updated",
                 Success = true
+            };
+        }
+
+        public async Task<BaseResponse> UpdateScheduledDevices(UpdateScheduleDeviceStatusDto updateStatus)
+        {
+            var device = await _deviceRepository.GetDevice(updateStatus.DeviceId);
+            var scheduledDevice = await _SchedulededDeviceRepository.GetScheduledDevice(updateStatus.DeviceId);
+            if(device == null || scheduledDevice == null)
+            {
+                return new BaseResponse()
+                {
+                    Message = "Can't Retrieve Device",
+                    Success = false
+                };
+            }
+            scheduledDevice.isActive = updateStatus.isActive;
+            device.isActive = updateStatus.isActive;
+            await _SchedulededDeviceRepository.UpdateAsync(scheduledDevice);
+            await _deviceRepository.UpdateAsync(device);
+            return new BaseResponse()
+            {
+                Message = "Device Status Updated",
+                Success = true,
+            };
+        }
+
+        public async Task<BaseResponse> CheckSchedule(int ScheduleId)
+        {
+            var schedule = await _ScheduleRepository.GetSchedule(ScheduleId);
+            var scheduledDevices = await _SchedulededDeviceRepository.GetScheduledDevices(ScheduleId);
+            if (schedule != null && schedule.StartTime <= TimeOnly.FromDateTime(DateTime.Now) && schedule.EndTime >= TimeOnly.FromDateTime(DateTime.Now))
+            {
+                if(schedule.OnRepeat == true)
+                {
+                    schedule.isActive = true;
+                    await _ScheduleRepository.UpdateAsync(schedule);
+
+                    if (scheduledDevices == null || scheduledDevices.Count == 0)
+                    {
+                        return new BaseResponse()
+                        {
+                            Message = "No devices scheduled for this schedule",
+                            Success = false
+                        };
+                    }
+                    foreach (var device in scheduledDevices)
+                    {
+                        var checkDevice = await _deviceRepository.GetDevice(device.DeviceId);
+
+                        checkDevice.isActive = device.isActive;
+                        await _SchedulededDeviceRepository.UpdateAsync(device);
+                        var deviceEntity = await _deviceRepository.GetDevice(device.DeviceId);
+                        if (deviceEntity != null)
+                        {
+                            deviceEntity.isActive = device.isActive;
+                            await _deviceRepository.UpdateAsync(deviceEntity);
+                        }
+                    }
+                    return new BaseResponse()
+                    {
+                        Message = "Scheduled devices status toggled on",
+                        Success = true
+                    };
+                }
+                foreach (var device in scheduledDevices)
+                {
+                    var checkDevice = await _deviceRepository.GetDevice(device.DeviceId);
+                    checkDevice.isActive = device.isActive;
+                    await _SchedulededDeviceRepository.UpdateAsync(device);
+                    var deviceEntity = await _deviceRepository.GetDevice(device.DeviceId);
+                    if (deviceEntity != null)
+                    {
+                        deviceEntity.isActive = device.isActive;
+                        await _deviceRepository.UpdateAsync(deviceEntity);
+                    }
+                }
+                return new BaseResponse()
+                {
+                    Message = "Scheduled devices status toggled on",
+                    Success = true
+                };
+            }
+            if (schedule != null  && schedule.EndTime <= TimeOnly.FromDateTime(DateTime.Now))
+            {
+                schedule.isActive = false;
+                await _ScheduleRepository.UpdateAsync(schedule);
+
+                if (scheduledDevices == null || scheduledDevices.Count == 0)
+                {
+                    return new BaseResponse()
+                    {
+                        Message = "No devices scheduled for this schedule",
+                        Success = false
+                    };
+                }
+                foreach (var device in scheduledDevices)
+                {
+
+                    var deviceEntity = await _deviceRepository.GetDevice(device.DeviceId);
+                    if (deviceEntity != null)
+                    {
+                        deviceEntity.isActive = false;
+                        await _deviceRepository.UpdateAsync(deviceEntity);
+                        device.isActive = deviceEntity.isActive;
+                        await _SchedulededDeviceRepository.UpdateAsync(device);
+                    }
+                }
+                return new BaseResponse()
+                {
+                    Message = "Scheduled devices status toggled off",
+                    Success = true
+                };
+            }
+            return new BaseResponse()
+            {
+                Message = "Schedule is not active",
+                Success = false
             };
         }
     }

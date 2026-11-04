@@ -14,12 +14,12 @@ namespace Hauto.Implementations.Repository
 
         public async Task<IList<Schedule>> GetAllSchedules()
         {
-            return await _Context.Schedules.Include(x => x.Device).OrderByDescending(x => x.IsDeleted == false).ToListAsync();
+            return await _Context.Schedules.Include(s => s.ScheduledDevice).ThenInclude(sd => sd.Device).ThenInclude(yd => yd.Hub).OrderByDescending(x => x.IsDeleted == false).ToListAsync();
         }
 
         public async Task<Schedule> GetSchedule(int Id)
         {
-            return await _Context.Schedules.Include(x => x.Device).FirstOrDefaultAsync(x => x.Id == Id);
+            return await _Context.Schedules.Include(s => s.ScheduledDevice).ThenInclude(sd => sd.Device).ThenInclude(yd => yd.Hub).FirstOrDefaultAsync(x => x.Id == Id);
         }
     }
 }

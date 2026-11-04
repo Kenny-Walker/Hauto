@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Hauto.Migrations
 {
     [DbContext(typeof(HautoContext))]
-    [Migration("20260803190633_Hauto1")]
-    partial class Hauto1
+    [Migration("20261014141716_Hauto")]
+    partial class Hauto
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -49,6 +49,9 @@ namespace Hauto.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int>("HubId")
+                        .HasColumnType("int");
+
                     b.Property<bool?>("IsDeleted")
                         .HasColumnType("tinyint(1)");
 
@@ -64,6 +67,49 @@ namespace Hauto.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Devices");
+                });
+
+            modelBuilder.Entity("Hauto.Entities.Hubs", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HubName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("LastModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastModifiedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeviceId");
+
+                    b.ToTable("Hubs");
                 });
 
             modelBuilder.Entity("Hauto.Entities.Log", b =>
@@ -132,8 +178,8 @@ namespace Hauto.Migrations
                     b.Property<DateTime?>("DeletedOn")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("DeviceId")
-                        .HasColumnType("int");
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time(6)");
 
                     b.Property<bool?>("IsDeleted")
                         .HasColumnType("tinyint(1)");
@@ -151,14 +197,74 @@ namespace Hauto.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<DateTime>("Time")
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time(6)");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Schedules");
+                });
+
+            modelBuilder.Entity("Hauto.Entities.ScheduledDevice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("DeletedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("DeletedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("LastModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastModifiedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ScheduleId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("tinyint(1)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId");
 
-                    b.ToTable("Schedules");
+                    b.HasIndex("ScheduleId")
+                        .IsUnique();
+
+                    b.ToTable("ScheduledDevices");
+                });
+
+            modelBuilder.Entity("Hauto.Entities.Hubs", b =>
+                {
+                    b.HasOne("Hauto.Entities.Device", "Device")
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Device");
                 });
 
             modelBuilder.Entity("Hauto.Entities.Log", b =>
@@ -172,7 +278,7 @@ namespace Hauto.Migrations
                     b.Navigation("Device");
                 });
 
-            modelBuilder.Entity("Hauto.Entities.Schedule", b =>
+            modelBuilder.Entity("Hauto.Entities.ScheduledDevice", b =>
                 {
                     b.HasOne("Hauto.Entities.Device", "Device")
                         .WithMany()
@@ -180,7 +286,21 @@ namespace Hauto.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Hauto.Entities.Schedule", "Schedule")
+                        .WithOne("ScheduledDevice")
+                        .HasForeignKey("Hauto.Entities.ScheduledDevice", "ScheduleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Device");
+
+                    b.Navigation("Schedule");
+                });
+
+            modelBuilder.Entity("Hauto.Entities.Schedule", b =>
+                {
+                    b.Navigation("ScheduledDevice")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

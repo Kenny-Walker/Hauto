@@ -10,38 +10,51 @@ namespace Hauto.Implementations.Service
         IDeviceRepo _DeviceRepository;
         ILogRepo _logRepository;
         IMqttService _mqttService;
-        public DeviceService(IDeviceRepo DeviceRepository, ILogRepo logRepository, IMqttService mqttService)
+        IHubsRepo _hubRepository;
+        public DeviceService(IDeviceRepo DeviceRepository, ILogRepo logRepository, IMqttService mqttService, IHubsRepo hubRepository)
         {
             _DeviceRepository = DeviceRepository;
             _logRepository = logRepository;
             _mqttService = mqttService;
+            _hubRepository = hubRepository;
         }
 
         public async Task<BaseResponse> CreateDevice(CreateDeviceDto createDevice)
         {
-            var device = new Device()
+            var hub = await _hubRepository.GetHub(createDevice.HubId);
+            if (hub != null) 
             {
-                DeviceName = createDevice.DeviceName,
-                isActive = false
-            };
-            await _DeviceRepository.CreateAsync(device);
-            var log = new Log()
-            {
-                DeviceId = device.Id,
-                LogStatement = $"{device.DeviceName} Created",
-                Date = DateTime.UtcNow,
-            };
-            await _logRepository.CreateAsync(log);
+                var device = new Device()
+                {
+                    HubId = createDevice.HubId,
+                    DeviceName = createDevice.DeviceName,
+                    isActive = false
+                };
+                await _DeviceRepository.CreateAsync(device);
+                var log = new Log()
+                {
+
+                    DeviceId = device.Id,
+                    LogStatement = $"{device.DeviceName} Created in {hub.HubName}",
+                    Date = DateTime.UtcNow,
+                };
+                await _logRepository.CreateAsync(log);
+                return new BaseResponse()
+                {
+                    Message = "Device Added Succesfully",
+                    Success = true
+                };
+            }
             return new BaseResponse()
             {
-                Message = "Device Added Succesfully",
+                Message = "Failed to Add Device",
                 Success = true
             };
         }
 
-        public async Task<DeviceResponse> GetAllDevices()
+        public async Task<DeviceResponse> GetAllDevicesByHubId(int HubId)
         {
-            var Device = await _DeviceRepository.GetAllDevices();
+            var Device = await _DeviceRepository.GetAllDevices(HubId);
             if (Device == null)
             {
                 return new DeviceResponse()
@@ -86,8 +99,36 @@ namespace Hauto.Implementations.Service
             return new GetDeviceDto()
             {
                 Id = x.Id,
+                HubId = x.HubId,
+                Hub = new GetHubsDto()
+                {
+                    Id = x.Hub.Id,
+                    HubName = x.Hub.HubName,
+                },
                 DeviceName = x.DeviceName,
                 isActive = x.isActive
+            };
+        }
+
+        public async Task<DeviceResponse> GetAllDevices()
+        {
+            var Device = await _DeviceRepository.GetAllDevices();
+            if (Device == null)
+            {
+                return new DeviceResponse()
+                {
+                    Data = null,
+                    Message = "Couldn't Retrieve Devices",
+                    Success = false
+                };
+            }
+            var DevicesList = new List<GetDeviceDto>();
+            foreach (var x in Device) DevicesList.Add(GetDeviceDetails(x));
+            return new DeviceResponse
+            {
+                Data = DevicesList,
+                Success = true,
+                Message = "Devices Retrieved Successfully"
             };
         }
 
@@ -117,7 +158,6 @@ namespace Hauto.Implementations.Service
                 Success = true
             };
         }
-
         public async Task<BaseResponse> UpdateDeviceStatus(UpdateDeviceStatusDto updateDeviceStatus)
         {
             var Device = await _DeviceRepository.GetDevice(updateDeviceStatus.DeviceId);
@@ -155,10 +195,10 @@ namespace Hauto.Implementations.Service
                 Success = true
             };
         }
-        public async Task SyncDevices()
+        /*public async Task SyncDevices()
         {
             var devices = await GetAllDevices();
             await _mqttService.PublishSync(devices.Data);
-        }
+        }*/
     }
 }

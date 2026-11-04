@@ -11,17 +11,26 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddCors(x => x.AddPolicy("Policies", c =>
 {
-    c.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
+    c.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
 // Add services to the container.
 builder.Services.AddScoped<IDeviceRepo, DeviceRepo>();
 builder.Services.AddScoped<ILogRepo, LogRepo>();
 builder.Services.AddScoped<IScheduleRepo, ScheduleRepo>();
+builder.Services.AddScoped<IHubsRepo, HubsRepo>();
+builder.Services.AddScoped<IScheduledDeviceRepo, ScheduledDeviceRepo>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
-builder.Services.AddSingleton<IMqttService, MqttService>();
-builder.Services.AddHostedService<MqttBackgroundService>();
+builder.Services.AddScoped<IHubsService, HubsService>();
+builder.Services.AddSingleton<MqttService>();
+
+builder.Services.AddSingleton<IMqttService>(
+    provider => provider.GetRequiredService<MqttService>());
+
+builder.Services.AddHostedService(
+    provider => provider.GetRequiredService<MqttService>()); 
+builder.Services.AddHostedService<MqttBackgroundRunService>();
 builder.Services.AddHttpContextAccessor();
 var connectionString = builder.Configuration.GetConnectionString("Hauto");
 builder.Services.AddDbContext<HautoContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
@@ -35,20 +44,17 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:7282","https://127.0.0.1:5254")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
     });
 });
 builder.Services.AddRateLimiter(options =>
 {
-    // 1. Set a higher fixed window limit (e.g., 1000 requests per minute instead of a low default)
     options.AddFixedWindowLimiter("HautoPolicy", opt =>
     {
-        opt.PermitLimit = 100;              // INCREASE THIS NUMBER to allow more requests
-        opt.Window = TimeSpan.FromMinutes(1); // Time window duration
+        opt.PermitLimit = 100;               
+        opt.Window = TimeSpan.FromMinutes(1); 
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 50;                 // How many requests can wait in line if limit is hit
+        opt.QueueLimit = 50;                
     });
 
     options.OnRejected = async (context, token) =>
@@ -65,6 +71,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 

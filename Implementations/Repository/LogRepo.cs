@@ -15,7 +15,6 @@ namespace Hauto.Implementations.Repository
         {
             return await _Context.Logs.Include(x => x.Device).FirstOrDefaultAsync(x => x.Id == Id);
         }
-
         public async Task<IList<Log>> GetAllLogs()
         {
             return await _Context.Logs.Include(x => x.Device).OrderByDescending(x => x.IsDeleted == false).ToListAsync();

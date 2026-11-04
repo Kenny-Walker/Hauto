@@ -65,6 +65,7 @@ namespace Hauto.Implementations.Service
                 Device = new GetDeviceDto()
                 {
                     Id = x.Device.Id,
+                    HubId = x.Device.HubId,
                     DeviceName = x.Device.DeviceName,
                     isActive = x.Device.isActive
                 }
