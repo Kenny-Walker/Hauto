@@ -21,7 +21,7 @@ public class BackgroundServices : BackgroundService
     {
         using var vscope = _serviceScopeFactory.CreateScope();
         var scheduleContext = vscope.ServiceProvider.GetRequiredService<IScheduleService>();
-        scheduleContext.CheckSchedule(ScheduleId);
+        await scheduleContext.CheckSchedule(ScheduleId);
         await Task.Delay(1800000);
         await Task.CompletedTask;
     }

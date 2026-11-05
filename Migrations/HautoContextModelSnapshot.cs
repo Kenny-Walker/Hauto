@@ -63,6 +63,8 @@ namespace Hauto.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("HubId");
+
                     b.ToTable("Devices");
                 });
 
@@ -242,10 +244,20 @@ namespace Hauto.Migrations
 
                     b.HasIndex("DeviceId");
 
-                    b.HasIndex("ScheduleId")
-                        .IsUnique();
+                    b.HasIndex("ScheduleId");
 
                     b.ToTable("ScheduledDevices");
+                });
+
+            modelBuilder.Entity("Hauto.Entities.Device", b =>
+                {
+                    b.HasOne("Hauto.Entities.Hubs", "Hub")
+                        .WithMany("Devices")
+                        .HasForeignKey("HubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hub");
                 });
 
             modelBuilder.Entity("Hauto.Entities.Log", b =>
@@ -268,8 +280,8 @@ namespace Hauto.Migrations
                         .IsRequired();
 
                     b.HasOne("Hauto.Entities.Schedule", "Schedule")
-                        .WithOne("ScheduledDevice")
-                        .HasForeignKey("Hauto.Entities.ScheduledDevice", "ScheduleId")
+                        .WithMany("ScheduledDevice")
+                        .HasForeignKey("ScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -278,10 +290,14 @@ namespace Hauto.Migrations
                     b.Navigation("Schedule");
                 });
 
+            modelBuilder.Entity("Hauto.Entities.Hubs", b =>
+                {
+                    b.Navigation("Devices");
+                });
+
             modelBuilder.Entity("Hauto.Entities.Schedule", b =>
                 {
-                    b.Navigation("ScheduledDevice")
-                        .IsRequired();
+                    b.Navigation("ScheduledDevice");
                 });
 #pragma warning restore 612, 618
         }

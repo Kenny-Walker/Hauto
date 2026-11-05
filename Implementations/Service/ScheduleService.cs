@@ -302,10 +302,60 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public async Task<BaseResponse> CheckSchedule(int ScheduleId)
+        public async Task<BaseResponse> CheckSchedule(int? ScheduleId)
         {
-            var schedule = await _ScheduleRepository.GetSchedule(ScheduleId);
-            var scheduledDevices = await _SchedulededDeviceRepository.GetScheduledDevices(ScheduleId);
+            
+            if (ScheduleId == null)
+            {
+                var schedules = await _ScheduleRepository.GetAllSchedules();
+                var scheduledDevice = await _SchedulededDeviceRepository.GetScheduledDevices(ScheduleId ?? 0);
+                foreach (var Schedule in schedules)
+                {
+                    if (Schedule != null && Schedule.StartTime <= TimeOnly.FromDateTime(DateTime.Now) && Schedule.EndTime >= TimeOnly.FromDateTime(DateTime.Now))
+                    {
+                        if (Schedule.OnRepeat == true)
+                        {
+                            Schedule.isActive = true;
+                            await _ScheduleRepository.UpdateAsync(Schedule);
+
+                            if (scheduledDevice == null || scheduledDevice.Count == 0)
+                            {
+                                return new BaseResponse()
+                                {
+                                    Message = "No devices scheduled for this schedule",
+                                    Success = false
+                                };
+                            }
+                            foreach (var device in scheduledDevice)
+                            {
+                                var checkDevice = await _deviceRepository.GetDevice(device.DeviceId);
+
+                                checkDevice.isActive = device.isActive;
+                                await _SchedulededDeviceRepository.UpdateAsync(device);
+                                var deviceEntity = await _deviceRepository.GetDevice(device.DeviceId);
+                                if (deviceEntity != null)
+                                {
+                                    deviceEntity.isActive = device.isActive;
+                                    await _deviceRepository.UpdateAsync(deviceEntity);
+                                }
+                            }
+                            return new BaseResponse()
+                            {
+                                Message = "Scheduled devices status toggled on",
+                                Success = true
+                            };
+                        }
+                        return new BaseResponse()
+                        {
+                            Message = "Scheduled devices status toggled on",
+                            Success = true
+                        };
+                    }
+                }
+
+            }
+            var schedule = await _ScheduleRepository.GetSchedule(ScheduleId ?? 0);
+            var scheduledDevices = await _SchedulededDeviceRepository.GetScheduledDevices(ScheduleId ?? 0);
             if (schedule != null && schedule.StartTime <= TimeOnly.FromDateTime(DateTime.Now) && schedule.EndTime >= TimeOnly.FromDateTime(DateTime.Now))
             {
                 if(schedule.OnRepeat == true)
@@ -339,18 +389,6 @@ namespace Hauto.Implementations.Service
                         Message = "Scheduled devices status toggled on",
                         Success = true
                     };
-                }
-                foreach (var device in scheduledDevices)
-                {
-                    var checkDevice = await _deviceRepository.GetDevice(device.DeviceId);
-                    checkDevice.isActive = device.isActive;
-                    await _SchedulededDeviceRepository.UpdateAsync(device);
-                    var deviceEntity = await _deviceRepository.GetDevice(device.DeviceId);
-                    if (deviceEntity != null)
-                    {
-                        deviceEntity.isActive = device.isActive;
-                        await _deviceRepository.UpdateAsync(deviceEntity);
-                    }
                 }
                 return new BaseResponse()
                 {

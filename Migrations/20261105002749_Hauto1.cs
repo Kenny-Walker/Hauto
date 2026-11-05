@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Hauto.Migrations
 {
     /// <inheritdoc />
-    public partial class Hauto : Migration
+    public partial class Hauto1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,15 +16,13 @@ namespace Hauto.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Devices",
+                name: "Hubs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    HubId = table.Column<int>(type: "int", nullable: false),
-                    DeviceName = table.Column<string>(type: "longtext", nullable: false)
+                    HubName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    isActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedOn = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     LastModifiedBy = table.Column<int>(type: "int", nullable: false),
@@ -35,7 +33,7 @@ namespace Hauto.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Devices", x => x.Id);
+                    table.PrimaryKey("PK_Hubs", x => x.Id);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -66,14 +64,15 @@ namespace Hauto.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "Hubs",
+                name: "Devices",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    HubName = table.Column<string>(type: "longtext", nullable: false)
+                    HubId = table.Column<int>(type: "int", nullable: false),
+                    DeviceName = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    DeviceId = table.Column<int>(type: "int", nullable: false),
+                    isActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedOn = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     LastModifiedBy = table.Column<int>(type: "int", nullable: false),
@@ -84,11 +83,11 @@ namespace Hauto.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Hubs", x => x.Id);
+                    table.PrimaryKey("PK_Devices", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Hubs_Devices_DeviceId",
-                        column: x => x.DeviceId,
-                        principalTable: "Devices",
+                        name: "FK_Devices_Hubs_HubId",
+                        column: x => x.HubId,
+                        principalTable: "Hubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -160,9 +159,9 @@ namespace Hauto.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Hubs_DeviceId",
-                table: "Hubs",
-                column: "DeviceId");
+                name: "IX_Devices_HubId",
+                table: "Devices",
+                column: "HubId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Logs_DeviceId",
@@ -177,16 +176,12 @@ namespace Hauto.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ScheduledDevices_ScheduleId",
                 table: "ScheduledDevices",
-                column: "ScheduleId",
-                unique: true);
+                column: "ScheduleId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Hubs");
-
             migrationBuilder.DropTable(
                 name: "Logs");
 
@@ -198,6 +193,9 @@ namespace Hauto.Migrations
 
             migrationBuilder.DropTable(
                 name: "Schedules");
+
+            migrationBuilder.DropTable(
+                name: "Hubs");
         }
     }
 }

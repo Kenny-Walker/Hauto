@@ -13,7 +13,7 @@ namespace Hauto.Interface.IService
         Task<BaseResponse> GetSchedule(int Id);
         Task<ScheduleResponse> GetAllSchedules();
         Task<BaseResponse> UpdateScheduledDevices(UpdateScheduleDeviceStatusDto updateStatus);
-        Task<BaseResponse> CheckSchedule(int ScheduleId);
+        Task<BaseResponse> CheckSchedule(int? ScheduleId);
         
     }
 }
