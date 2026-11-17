@@ -16,9 +16,9 @@ namespace Hauto.Implementations.Repository
         {
             return await _Context.Devices.Include(x => x.Hub).OrderByDescending(x => x.IsDeleted == false && x.HubId == HubId).ToListAsync();
         }
-        public async Task<IList<Device>> GetAllDevices()
+        public async Task<IList<Device>> GetAllUserDevices(int UserId)
         {
-            return await _Context.Devices.Include(x => x.Hub).OrderByDescending(x => x.IsDeleted == false).ToListAsync();
+            return await _Context.Devices.Include(x => x.Hub).OrderByDescending(x => x.IsDeleted == false && x.UserId == UserId).ToListAsync();
         }
         public async Task<Device> GetDevice(int Id)
         {

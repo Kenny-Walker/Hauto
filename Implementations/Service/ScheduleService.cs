@@ -65,6 +65,7 @@ namespace Hauto.Implementations.Service
         {
             var Schedule = new Schedule()
             {
+                UserId = createSchedule.UserId,
                 ScheduleName = createSchedule.ScheduleName,
                 StartTime = createSchedule.StartTime,
                 EndTime = createSchedule.EndTime,
@@ -97,9 +98,9 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public async Task<ScheduleResponse> GetAllSchedules()
+        public async Task<ScheduleResponse> GetAllSchedules(int UserId)
         {
-            var Schedule = await _ScheduleRepository.GetAllSchedules();
+            var Schedule = await _ScheduleRepository.GetAllSchedules(UserId);
             if (Schedule == null)
             {
                 return new ScheduleResponse()
@@ -166,6 +167,7 @@ namespace Hauto.Implementations.Service
             return new GetScheduleDto()
             {
                 Id = c.Id,
+                UserId = c.UserId,
                 ScheduleName = c.ScheduleName,
                 OnRepeat = c.OnRepeat,
                 isActive = c.isActive,
@@ -209,7 +211,8 @@ namespace Hauto.Implementations.Service
                 ScheduleId = x.ScheduleId,
                 Schedule = new GetScheduleDto()
                 {
-                    Id = x.Id,
+                    Id = x.Schedule.Id,
+                    UserId = x.Schedule.UserId,
                     ScheduleName = x.Schedule.ScheduleName,
                     OnRepeat = x.Schedule.OnRepeat,
                     isActive = x.Schedule.isActive,
@@ -302,12 +305,12 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public async Task<BaseResponse> CheckSchedule(int? ScheduleId)
+        public async Task<BaseResponse> CheckSchedule(int? ScheduleId, int UserId)
         {
             
             if (ScheduleId == null)
             {
-                var schedules = await _ScheduleRepository.GetAllSchedules();
+                var schedules = await _ScheduleRepository.GetAllSchedules(UserId);
                 var scheduledDevice = await _SchedulededDeviceRepository.GetScheduledDevices(ScheduleId ?? 0);
                 foreach (var Schedule in schedules)
                 {

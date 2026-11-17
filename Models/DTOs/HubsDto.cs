@@ -2,6 +2,7 @@
 {
     public class CreateHubsDto
     {
+        public int UserId { get; set; }
         public string HubName { get; set; }
     }
     public class UpdateHubsDto
@@ -12,6 +13,7 @@
     public class GetHubsDto
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string HubName { get; set; }
         public List<GetDeviceDto> Devices { get; set; }
     }

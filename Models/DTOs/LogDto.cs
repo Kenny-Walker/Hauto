@@ -9,6 +9,7 @@
     public class GetLogDto
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public int DeviceId { get; set; }
         public GetDeviceDto Device { get; set; }
         public string LogStatement { get; set; }

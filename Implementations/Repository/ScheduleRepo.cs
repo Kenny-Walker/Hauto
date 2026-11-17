@@ -12,9 +12,9 @@ namespace Hauto.Implementations.Repository
             _Context = Context;
         }
 
-        public async Task<IList<Schedule>> GetAllSchedules()
+        public async Task<IList<Schedule>> GetAllSchedules(int UserId)
         {
-            return await _Context.Schedules.Include(s => s.ScheduledDevice).ThenInclude(sd => sd.Device).ThenInclude(yd => yd.Hub).OrderByDescending(x => x.IsDeleted == false).ToListAsync();
+            return await _Context.Schedules.Include(s => s.ScheduledDevice).ThenInclude(sd => sd.Device).ThenInclude(yd => yd.Hub).OrderByDescending(x => x.IsDeleted == false && x.UserId == UserId).ToListAsync();
         }
 
         public async Task<Schedule> GetSchedule(int Id)

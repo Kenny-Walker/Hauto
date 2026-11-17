@@ -59,9 +59,9 @@ namespace Hauto.Controllers
         }
 
         [HttpGet("GetAllSchedules")]
-        public async Task<IActionResult> GetAllSchedules()
+        public async Task<IActionResult> GetAllSchedules(int UserId)
         {
-            var Schedule = await _ScheduleService.GetAllSchedules(); return Ok(Schedule);
+            var Schedule = await _ScheduleService.GetAllSchedules(UserId); return Ok(Schedule);
         }
 
         [HttpDelete("DeleteSchedule")]

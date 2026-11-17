@@ -5,6 +5,6 @@ namespace Hauto.Interface.IService
     public interface ILogService
     {
         Task<BaseResponse> GetLog(int Id);
-        Task<LogResponse> GetAllLogs();
+        Task<LogResponse> GetAllLogs(int UserId);
     }
 }

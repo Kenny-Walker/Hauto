@@ -31,9 +31,9 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public async Task<HubsResponse> GetAllHubs()
+        public async Task<HubsResponse> GetAllHubs(int UserId)
         {
-            var hub = await _hubRepository.GetAllHubs();
+            var hub = await _hubRepository.GetAllUserHubs(UserId);
             if (hub == null)
             {
                 return new HubsResponse()
@@ -98,6 +98,7 @@ namespace Hauto.Implementations.Service
             return new GetHubsDto()
             {
                 Id = x.Id,
+                UserId = x.UserId,
                 HubName = x.HubName,
                 Devices = x.Devices.Select(c => new GetDeviceDto()
                 {

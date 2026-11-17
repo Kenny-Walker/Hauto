@@ -4,6 +4,7 @@ namespace Hauto.Models.DTOs
 {
     public class CreateScheduleDto
     {
+        public int UserId { get; set; }
         public string ScheduleName { get; set; }
         public TimeOnly StartTime { get; set; }
         public TimeOnly EndTime { get; set; }
@@ -35,6 +36,7 @@ namespace Hauto.Models.DTOs
     public class GetScheduleDto
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string ScheduleName { get; set; }
         public List<GetScheduleDeviceDto> ScheduleDevice { get; set; }
         public TimeOnly StartTime { get; set; }

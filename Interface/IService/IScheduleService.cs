@@ -11,9 +11,9 @@ namespace Hauto.Interface.IService
         Task<BaseResponse> UpdateActiveScheduleStatus(UpdateActiveScheduleStatusDto updateActiveScheduleStatus);
         Task<BaseResponse> DeleteSchedule(int Id);
         Task<BaseResponse> GetSchedule(int Id);
-        Task<ScheduleResponse> GetAllSchedules();
+        Task<ScheduleResponse> GetAllSchedules(int User);
         Task<BaseResponse> UpdateScheduledDevices(UpdateScheduleDeviceStatusDto updateStatus);
-        Task<BaseResponse> CheckSchedule(int? ScheduleId);
+        Task<BaseResponse> CheckSchedule(int? ScheduleId, int UserId);
         
     }
 }

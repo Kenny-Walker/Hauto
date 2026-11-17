@@ -39,15 +39,20 @@ namespace Hauto.Controllers
         }
 
         [HttpGet("GetDevices")]
-        public async Task<IActionResult> GetDevices()
+        public async Task<IActionResult> GetDevices(int UserId)
         {
-            var Device = await _DeviceService.GetAllDevices(); return Ok(Device);
+            var Device = await _DeviceService.GetAllDevices(UserId); return Ok(Device);
         }
 
         [HttpGet("GetHubDevices")]
         public async Task<IActionResult> GetHubDevices(int HubId)
         {
             var Device = await _DeviceService.GetAllDevicesByHubId(HubId); return Ok(Device);
+        }
+        [HttpPost("KillSwitch")]
+        public async Task<IActionResult> KillSwitch(int UserId, string Passcode)
+        {
+            var Device = await _DeviceService.KillSwitchProtocol(UserId, Passcode); return Ok(Device);
         }
     }
 }

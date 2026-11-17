@@ -12,9 +12,9 @@ namespace Hauto.Implementations.Service
         {
             _LogRepository = LogRepository;
         }
-        public async Task<LogResponse> GetAllLogs()
+        public async Task<LogResponse> GetAllLogs(int UserId)
         {
-            var Log = await _LogRepository.GetAllLogs();
+            var Log = await _LogRepository.GetAllLogs(UserId);
             if (Log == null)
             {
                 return new LogResponse()
@@ -59,6 +59,7 @@ namespace Hauto.Implementations.Service
             return new GetLogDto()
             {
                 Id = x.Id,
+                UserId = x.UserId,
                 LogStatement = x.LogStatement,
                 Date = x.Date,
                 DeviceId = x.DeviceId,

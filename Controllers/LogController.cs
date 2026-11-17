@@ -21,9 +21,9 @@ namespace Hauto.Controllers
         }
 
         [HttpGet("GetLogs")]
-        public async Task<IActionResult> GetLogs()
+        public async Task<IActionResult> GetLogs(int UserId)
         {
-            var log = await _logService.GetAllLogs();
+            var log = await _logService.GetAllLogs(UserId);
             if (log.Success == true)
             {
                 return Ok(log);

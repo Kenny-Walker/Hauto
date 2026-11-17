@@ -7,6 +7,6 @@ namespace Hauto.Interface.IService
         Task<BaseResponse> CreateHub(CreateHubsDto createHub);
         Task<BaseResponse> UpdateHub(UpdateHubsDto updateHub);
         Task<BaseResponse> GetHub(int Id);
-        Task<HubsResponse> GetAllHubs();
+        Task<HubsResponse> GetAllHubs(int UserId);
     }
 }

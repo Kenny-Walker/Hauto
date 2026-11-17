@@ -11,21 +11,25 @@ namespace Hauto.Implementations.Service
         ILogRepo _logRepository;
         IMqttService _mqttService;
         IHubsRepo _hubRepository;
-        public DeviceService(IDeviceRepo DeviceRepository, ILogRepo logRepository, IMqttService mqttService, IHubsRepo hubRepository)
+        IUserRepo _userRepository;
+        public DeviceService(IDeviceRepo DeviceRepository, ILogRepo logRepository, IMqttService mqttService, IHubsRepo hubRepository, IUserRepo userRepository)
         {
             _DeviceRepository = DeviceRepository;
             _logRepository = logRepository;
             _mqttService = mqttService;
             _hubRepository = hubRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<BaseResponse> CreateDevice(CreateDeviceDto createDevice)
         {
             var hub = await _hubRepository.GetHub(createDevice.HubId);
-            if (hub != null) 
+            var user = await _userRepository.GetUserId(createDevice.UserId);
+            if (hub != null || user != null) 
             {
                 var device = new Device()
                 {
+                    UserId = createDevice.UserId,
                     HubId = createDevice.HubId,
                     DeviceName = createDevice.DeviceName,
                     isActive = false
@@ -33,7 +37,7 @@ namespace Hauto.Implementations.Service
                 await _DeviceRepository.CreateAsync(device);
                 var log = new Log()
                 {
-
+                    UserId = device.UserId,
                     DeviceId = device.Id,
                     LogStatement = $"{device.DeviceName} Created in {hub.HubName}",
                     Date = DateTime.UtcNow,
@@ -99,6 +103,7 @@ namespace Hauto.Implementations.Service
             return new GetDeviceDto()
             {
                 Id = x.Id,
+                UserId = x.UserId,
                 HubId = x.HubId,
                 Hub = new GetHubsDto()
                 {
@@ -110,9 +115,9 @@ namespace Hauto.Implementations.Service
             };
         }
 
-        public async Task<DeviceResponse> GetAllDevices()
+        public async Task<DeviceResponse> GetAllDevices(int UserId)
         {
-            var Device = await _DeviceRepository.GetAllDevices();
+            var Device = await _DeviceRepository.GetAllDevices(UserId);
             if (Device == null)
             {
                 return new DeviceResponse()
@@ -147,6 +152,7 @@ namespace Hauto.Implementations.Service
             await _DeviceRepository.UpdateAsync(Device);
             var log = new Log()
             {
+                UserId = Device.UserId,
                 DeviceId = Device.Id,
                 LogStatement = $"{Device.DeviceName} Updated",
                 Date = DateTime.UtcNow,
@@ -176,6 +182,7 @@ namespace Hauto.Implementations.Service
             {
                 var log = new Log()
                 {
+                    UserId = Device.UserId,
                     DeviceId = Device.Id,
                     LogStatement = $"{Device.DeviceName} is On",
                     Date = DateTime.UtcNow,
@@ -184,6 +191,7 @@ namespace Hauto.Implementations.Service
             }
             var logOff = new Log()
             {
+                UserId = Device.UserId,
                 DeviceId = Device.Id,
                 LogStatement = $"{Device.DeviceName} is Off",
                 Date = DateTime.UtcNow,
@@ -195,10 +203,44 @@ namespace Hauto.Implementations.Service
                 Success = true
             };
         }
-        /*public async Task SyncDevices()
+
+        public async Task<BaseResponse> KillSwitchProtocol(int UserId, string Passcode)
         {
-            var devices = await GetAllDevices();
-            await _mqttService.PublishSync(devices.Data);
-        }*/
+            var devices = await _DeviceRepository.GetAllDevices(UserId);
+            var user = await _userRepository.GetUserId(UserId);
+            if (devices == null || user == null)
+            {
+                return new BaseResponse()
+                {
+                    Message = "No devices found",
+                    Success = false
+                };
+            }
+            if (user != null && user.Passcode == Passcode)
+            {
+                foreach (var device in devices)
+                {
+                    device.isActive = false;
+                    await _DeviceRepository.UpdateAsync(device);
+                }
+                return new BaseResponse()
+                {
+                    Message = "Kill Switch Protocol Activated",
+                    Success = true
+                };
+            }
+            return new BaseResponse()
+            {
+                Message = "Failed to Initiate Kill Switch Protocol",
+                Success = false
+            };
+
+
+        }
+        /*public async Task SyncDevices()
+{
+   var devices = await GetAllDevices();
+   await _mqttService.PublishSync(devices.Data);
+}*/
     }
 }

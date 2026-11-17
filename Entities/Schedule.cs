@@ -4,6 +4,7 @@ namespace Hauto.Entities
 {
     public class Schedule : AuditableEntity
     {
+        public int UserId { get; set; }
         public string ScheduleName { get; set; }    
         public TimeOnly StartTime { get; set; }
         public TimeOnly EndTime { get; set; }

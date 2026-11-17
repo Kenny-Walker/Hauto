@@ -5,6 +5,6 @@ namespace Hauto.Interface.IRepository
     public interface IScheduleRepo : IGenericRepo<Schedule>
     {
         Task<Schedule> GetSchedule(int Id);
-        Task<IList<Schedule>> GetAllSchedules();
+        Task<IList<Schedule>> GetAllSchedules(int UserId);
     }
 }

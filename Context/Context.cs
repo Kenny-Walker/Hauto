@@ -15,6 +15,7 @@ namespace Hauto.Context
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Hubs> Hubs { get; set; }
         public DbSet<ScheduledDevice> ScheduledDevices { get; set; }
+        public DbSet<User> Users { get; set; }
 
     }
 }

@@ -12,9 +12,9 @@ namespace Hauto.Implementations.Repository
             _Context = Context;
         }
 
-        public async Task<IList<Hubs>> GetAllHubs()
+        public async Task<IList<Hubs>> GetAllUserHubs(int UserId)
         {
-            return await _Context.Hubs.Include(x => x.Devices).OrderByDescending(x => x.IsDeleted == false).ToListAsync();
+            return await _Context.Hubs.Include(x => x.Devices).OrderByDescending(x => x.IsDeleted == false && x.UserId == UserId).ToListAsync();
         }
 
         public async Task<Hubs> GetHub(int Id)

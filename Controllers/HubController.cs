@@ -34,9 +34,9 @@ namespace Hauto.Controllers
         }
 
         [HttpGet("GetHubs")]
-        public async Task<IActionResult> GetHubs()
+        public async Task<IActionResult> GetHubs(int UserId)
         {
-            var hub = await _hubService.GetAllHubs(); return Ok(hub);
+            var hub = await _hubService.GetAllHubs(UserId); return Ok(hub);
         }
     }
 }
