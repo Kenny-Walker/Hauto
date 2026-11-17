@@ -50,7 +50,7 @@ namespace Hauto.Implementations.Service
                 LastName = createUser.LastName,
                 Email = createUser.Email,
                 Password = createUser.Password,
-                Passcode = null
+                Passcode = null,
             };
             await _userRepo.CreateAsync(user);
             return new BaseResponse()

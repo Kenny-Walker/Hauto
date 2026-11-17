@@ -181,10 +181,12 @@ namespace Hauto.Implementations.Service
                     Device = new GetDeviceDto()
                     {
                         Id = x.Device.Id,
+                        UserId = x.Device.UserId,
                         HubId = x.Device.HubId,
                         Hub = new GetHubsDto()
                         {
                             Id = x.Device.Hub.Id,
+                            UserId = x.Device.Hub.UserId,
                             HubName = x.Device.Hub.HubName,
                         },
                         DeviceName = x.Device.DeviceName,
@@ -203,7 +205,8 @@ namespace Hauto.Implementations.Service
                 isActive = x.isActive,
                 Device = new GetDeviceDto()
                 {
-                    Id = x.DeviceId,
+                    Id = x.Device.Id,
+                    UserId = x.Device.UserId,
                     HubId = x.Device.HubId,
                     DeviceName = x.Device.DeviceName,
                     isActive = x.Device.isActive,

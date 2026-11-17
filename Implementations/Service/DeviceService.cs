@@ -108,6 +108,7 @@ namespace Hauto.Implementations.Service
                 Hub = new GetHubsDto()
                 {
                     Id = x.Hub.Id,
+                    UserId = x.Hub.UserId,
                     HubName = x.Hub.HubName,
                 },
                 DeviceName = x.DeviceName,

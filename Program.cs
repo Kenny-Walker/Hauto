@@ -19,6 +19,8 @@ builder.Services.AddScoped<ILogRepo, LogRepo>();
 builder.Services.AddScoped<IScheduleRepo, ScheduleRepo>();
 builder.Services.AddScoped<IHubsRepo, HubsRepo>();
 builder.Services.AddScoped<IScheduledDeviceRepo, ScheduledDeviceRepo>();
+builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDeviceService, DeviceService>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();

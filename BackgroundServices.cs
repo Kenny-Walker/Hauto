@@ -17,11 +17,11 @@ public class BackgroundServices : BackgroundService
         var context = vscope.ServiceProvider.GetRequiredService<HautoContext>();
         await Task.CompletedTask;
     }
-    protected async Task CheckScheduleAsync(int ScheduleId)
+    protected async Task CheckScheduleAsync(int ScheduleId, int UserId)
     {
         using var vscope = _serviceScopeFactory.CreateScope();
         var scheduleContext = vscope.ServiceProvider.GetRequiredService<IScheduleService>();
-        await scheduleContext.CheckSchedule(ScheduleId);
+        await scheduleContext.CheckSchedule(ScheduleId, UserId);
         await Task.Delay(1800000);
         await Task.CompletedTask;
     }
